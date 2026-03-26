@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oil Prices & Inflation Expectations | The Purpose Post | Calderon Fortney Financial Group</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Verdana, Geneva, sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(145deg, #1B5E3B 0%, #227B4B 50%, #1B5E3B 100%);
+      position: relative;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    .grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .glow {
+      position: absolute;
+      top: 20%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      position: relative;
+      z-index: 1;
+    }
+    .header {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .cf-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+    .series-name {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 14px;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-style: italic;
+    }
+    .category-tag {
+      color: #C4A44A;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: block;
+    }
+    h1 {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: clamp(26px, 5vw, 38px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #E8B86D 0%, #F0D090 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      color: rgba(255,255,255,0.75);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 600px;
+      margin-bottom: 32px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+    }
+    .stat-card {
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .stat-card.oil {
+      background: rgba(232, 184, 109, 0.15);
+      border: 1px solid rgba(232, 184, 109, 0.3);
+    }
+    .stat-card.inflation {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .stat-label-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .stat-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .stat-dot.oil { background: #E8B86D; }
+    .stat-dot.inflation { background: #fff; }
+    .stat-label {
+      color: rgba(255,255,255,0.6);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 34px;
+      font-weight: 700;
+    }
+    .stat-value.oil { color: #E8B86D; }
+    .stat-value.inflation { color: #fff; }
+    .stat-change {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    .stat-change.up { color: #A8E6CF; }
+    .stat-change.down { color: #FFB3B3; }
+    .stat-note {
+      font-size: 10px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 6px;
+    }
+    .chart-container {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px 20px 16px 20px;
+      margin-bottom: 24px;
+      min-height: 380px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+    }
+    .insight-box {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards;
+    }
+    .insight-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .insight-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+    .insight-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #E8B86D;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .insight-text {
+      color: rgba(255,255,255,0.85);
+      font-size: 14px;
+      line-height: 1.65;
+      margin: 0;
+    }
+    .article-section {
+      background: rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards;
+    }
+    .article-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .article-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(232, 184, 109, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .article-label {
+      color: #C4A44A;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .article-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+    .article-body {
+      color: rgba(255,255,255,0.85);
+      font-size: 14px;
+      line-height: 1.75;
+    }
+    .article-body p {
+      margin-bottom: 16px;
+    }
+    .article-body p:last-child {
+      margin-bottom: 0;
+    }
+    .article-highlight {
+      background: rgba(232, 184, 109, 0.1);
+      border-left: 3px solid #C4A44A;
+      padding: 16px 20px;
+      margin: 20px 0;
+      border-radius: 0 12px 12px 0;
+    }
+    .article-highlight p {
+      margin-bottom: 0;
+      color: rgba(255,255,255,0.9);
+      font-style: italic;
+    }
+    .source-ref {
+      font-size: 10px;
+      color: rgba(255,255,255,0.5);
+      vertical-align: super;
+    }
+    .footer {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards;
+    }
+    .footer-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .footer-source {
+      color: rgba(255,255,255,0.5);
+      font-size: 10px;
+      margin-bottom: 4px;
+      line-height: 1.5;
+    }
+    .footer-brand {
+      font-family: Georgia, 'Times New Roman', serif;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 12px;
+    }
+    .footer-compliance {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .footer-compliance p {
+      color: rgba(255,255,255,0.4);
+      font-size: 10px;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .footer-compliance p:last-child {
+      margin-bottom: 0;
+    }
+    @keyframes fadeUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-pattern"></div>
+  <div class="glow"></div>
+  
+  <div class="container">
+    <div class="header">
+      <div class="brand-row">
+        <div class="cf-logo">CF</div>
+        <span class="series-name">The Purpose Post</span>
+      </div>
+      <span class="category-tag">Market Insight</span>
+      <h1>Oil Prices & <span class="gradient-text">Inflation Expectations</span></h1>
+      <p class="subtitle">These two indicators tend to move together over time. When oil rises, inflation expectations often follow. Understanding this relationship can help make sense of economic headlines.</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card oil">
+        <div class="stat-label-row">
+          <div class="stat-dot oil"></div>
+          <span class="stat-label">WTI Crude Oil</span>
+        </div>
+        <div class="stat-value oil">$91.79</div>
+        <div class="stat-change up">↑ 52% since January</div>
+        <div class="stat-note">Prices have been volatile. Update before publishing.</div>
+      </div>
+      <div class="stat-card inflation">
+        <div class="stat-label-row">
+          <div class="stat-dot inflation"></div>
+          <span class="stat-label">5-Yr Inflation Exp.</span>
+        </div>
+        <div class="stat-value inflation">2.53%</div>
+        <div class="stat-change up">↑ from 2.50% in January</div>
+        <div class="stat-note">As of March 23, 2026</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="chart"></canvas>
+    </div>
+
+    <div class="insight-box">
+      <div class="insight-content">
+        <div class="insight-icon">💡</div>
+        <div>
+          <h3 class="insight-title">Reading the Chart</h3>
+          <p class="insight-text">Notice how both lines climbed together during the 2022 energy price surge, then normalized through 2023 and 2024. When oil prices move sharply, inflation expectations tend to follow. The uptick on the right side of the chart reflects recent developments. This pattern has repeated across multiple market cycles.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="article-section">
+      <div class="article-header">
+        <div class="article-icon">📰</div>
+        <span class="article-label">The Bigger Picture</span>
+      </div>
+      <h2 class="article-title">Why Oil and Inflation Move Together</h2>
+      <div class="article-body">
+        <p>Oil prices affect nearly everything in the economy. Transportation costs, manufacturing, heating, the price of goods on store shelves. When oil rises, businesses face higher costs, and those costs tend to get passed along to consumers. Markets know this, which is why inflation expectations often move in tandem with energy prices.</p>
+        
+        <p>The chart above shows this relationship over the past four years. During the 2022 energy price surge, both oil and inflation expectations climbed together. As oil prices normalized through 2023 and into 2024, inflation expectations came down as well. The pattern is not perfect, but the relationship is clear.</p>
+
+        <div class="article-highlight">
+          <p>When supply is disrupted and prices rise, inflation expectations tend to follow. This is the relationship playing out in real time.</p>
+        </div>
+
+        <p>The current conflict involving Iran and disruptions to shipping through the Strait of Hormuz have brought renewed attention to this dynamic. Oil prices have swung across a wide range as the situation has evolved, with WTI moving from around $60 in January to above $90 in March.<span class="source-ref">[1]</span> The International Energy Agency has noted supply disruptions, and IEA member countries agreed in March to make emergency reserves available to help stabilize markets.<span class="source-ref">[2]</span></p>
+
+        <p>The U.S. Energy Information Administration forecasts that prices may remain elevated in the near term before potentially easing later in the year, though they note this outlook depends heavily on how the situation develops.<span class="source-ref">[3]</span> The Federal Reserve has described inflation as "somewhat elevated" and has indicated they will remain patient.</p>
+
+        <p>What does this mean for families thinking about their financial plans? Higher energy costs work their way through the economy over time. For those in or approaching retirement, understanding how inflation affects purchasing power is part of building a plan that holds up through different market environments.</p>
+
+        <p>That's the thinking behind this chart. We want to provide context for the conversations many families are having right now about what all of this means for their plans. If you have questions about how current events might affect your financial picture, we're always happy to talk it through.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-top">
+        <div>
+          <div class="footer-source">
+            Chart Data: Federal Reserve Economic Data (FRED), series DCOILWTICO and T5YIE, March 2022 through March 2026.<br>
+            [1] CNBC, March 2026. [2] IEA Oil Market Report, March 2026. [3] EIA Short-Term Energy Outlook, March 2026.
+          </div>
+        </div>
+        <span class="footer-brand">Calderon Fortney Financial Group</span>
+      </div>
+      <div class="footer-compliance">
+        <p>This content is for educational and informational purposes only and should not be construed as investment advice or a recommendation to buy or sell any security. Past performance is not indicative of future results. Oil prices and inflation expectations are subject to significant volatility and can change rapidly based on geopolitical events, economic conditions, and other factors.</p>
+        <p>The opinions expressed are those of Calderon Fortney Financial Group as of April 2026 and are subject to change without notice. This material is not intended to be relied upon as a forecast or research. Consult with a qualified financial advisor before making investment decisions.</p>
+        <p>Securities and advisory services offered through LPL Financial, a Registered Investment Advisor, Member FINRA/SIPC.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Real FRED monthly data - Mar 2022 to Mar 2026
+    // UPDATE THESE VALUES WITH FRESH FRED DATA BEFORE APRIL PUBLISH
+    const labels = [
+      "Mar '22", "Apr '22", "May '22", "Jun '22",
+      "Jul '22", "Aug '22", "Sep '22", "Oct '22", "Nov '22", "Dec '22",
+      "Jan '23", "Feb '23", "Mar '23", "Apr '23", "May '23", "Jun '23",
+      "Jul '23", "Aug '23", "Sep '23", "Oct '23", "Nov '23", "Dec '23",
+      "Jan '24", "Feb '24", "Mar '24", "Apr '24", "May '24", "Jun '24",
+      "Jul '24", "Aug '24", "Sep '24", "Oct '24", "Nov '24", "Dec '24",
+      "Jan '25", "Feb '25", "Mar '25", "Apr '25", "May '25", "Jun '25",
+      "Jul '25", "Aug '25", "Sep '25", "Oct '25", "Nov '25", "Dec '25",
+      "Jan '26", "Feb '26", "Mar '26"
+    ];
+
+    const oilData = [
+      100.53, 104.59, 114.38, 107.76,
+      101.31, 90.09, 79.91, 86.54, 80.48, 80.16,
+      78.95, 76.88, 75.68, 76.78, 68.11, 70.66,
+      81.8, 83.55, 90.77, 81.64, 75.66, 71.89,
+      76.28, 79.22, 83.96, 83.49, 77.97, 82.83,
+      79.36, 74.52, 68.75, 69.58, 68.26, 72.44,
+      72.84, 69.97, 71.87, 59.55, 61.46, 66.3,
+      70.36, 64.36, 63.17, 61.75, 58.58, 57.26,
+      60.46, 63.50, 91.79  // UPDATE Mar '26 before publish
+    ];
+
+    const inflationData = [
+      3.34, 3.3, 2.96, 2.58,
+      2.73, 2.58, 2.14, 2.67, 2.41, 2.33,
+      2.27, 2.58, 2.4, 2.2, 2.07, 2.18,
+      2.27, 2.15, 2.22, 2.4, 2.15, 2.12,
+      2.24, 2.4, 2.38, 2.43, 2.34, 2.24,
+      2.13, 2.01, 2.07, 2.38, 2.33, 2.38,
+      2.54, 2.58, 2.61, 2.29, 2.39, 2.31,
+      2.46, 2.47, 2.42, 2.4, 2.29, 2.26,
+      2.50, 2.52, 2.53  // UPDATE Mar '26 before publish
+    ];
+
+    const ctx = document.getElementById('chart').getContext('2d');
+    
+    // Force high-DPI rendering
+    Chart.defaults.devicePixelRatio = window.devicePixelRatio * 2 || 2;
+    
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'WTI Crude Oil ($/barrel)',
+            data: oilData,
+            borderColor: '#E8B86D',
+            backgroundColor: 'rgba(232, 184, 109, 0.1)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 3,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: '#E8B86D',
+            pointHoverBorderColor: '#227B4B',
+            pointHoverBorderWidth: 2,
+            yAxisID: 'y'
+          },
+          {
+            label: '5-Yr Inflation Expectations (%)',
+            data: inflationData,
+            borderColor: '#ffffff',
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.3,
+            borderWidth: 3,
+            pointRadius: 0,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: '#ffffff',
+            pointHoverBorderColor: '#227B4B',
+            pointHoverBorderWidth: 2,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1.8,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            align: 'end',
+            labels: {
+              color: 'rgba(255,255,255,0.7)',
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 11
+              },
+              boxWidth: 12,
+              boxHeight: 12,
+              padding: 15,
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            titleColor: '#1E6B3E',
+            titleFont: {
+              family: "Georgia, 'Times New Roman', serif",
+              size: 13,
+              weight: 600
+            },
+            bodyColor: '#4A4A4A',
+            bodyFont: {
+              family: "Verdana, Geneva, sans-serif",
+              size: 12
+            },
+            padding: 12,
+            cornerRadius: 8,
+            borderColor: 'rgba(30, 107, 62, 0.3)',
+            borderWidth: 1,
+            displayColors: true,
+            boxWidth: 10,
+            boxHeight: 10,
+            boxPadding: 4,
+            usePointStyle: true,
+            callbacks: {
+              labelColor: function(context) {
+                if (context.datasetIndex === 0) {
+                  return {
+                    borderColor: '#E8B86D',
+                    backgroundColor: '#E8B86D',
+                    borderRadius: 5
+                  };
+                } else {
+                  return {
+                    borderColor: '#1E6B3E',
+                    backgroundColor: '#1E6B3E',
+                    borderRadius: 5
+                  };
+                }
+              },
+              label: function(context) {
+                if (context.datasetIndex === 0) {
+                  return ' Oil: $' + context.parsed.y.toFixed(2) + '/barrel';
+                } else {
+                  return ' Inflation Exp: ' + context.parsed.y.toFixed(2) + '%';
+                }
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              color: 'rgba(255,255,255,0.5)',
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 11
+              },
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 9
+            },
+            border: {
+              display: false
+            }
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 40,
+            max: 130,
+            grid: {
+              color: 'rgba(255,255,255,0.05)'
+            },
+            ticks: {
+              color: '#E8B86D',
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 11
+              },
+              callback: function(value) {
+                return '$' + value;
+              }
+            },
+            border: {
+              display: false
+            }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 1.5,
+            max: 4.0,
+            grid: {
+              drawOnChartArea: false
+            },
+            ticks: {
+              color: 'rgba(255,255,255,0.8)',
+              font: {
+                family: "Verdana, Geneva, sans-serif",
+                size: 11
+              },
+              callback: function(value) {
+                return value.toFixed(1) + '%';
+              }
+            },
+            border: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
